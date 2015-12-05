@@ -102,16 +102,15 @@ def get_crt(account_key, csr, acme_dir):
 
         # make the challenge file
         challenge = [c for c in json.loads(result)['challenges'] if c['type'] == "http-01"][0]
-        challenge['token'] = re.sub(r"[^A-Za-z0-9_\-]", "_", challenge['token'])
-        keyauthorization = "{0}.{1}".format(challenge['token'], thumbprint)
-        wellknown_path = os.path.join(acme_dir, challenge['token'])
+        token = re.sub(r"[^A-Za-z0-9_\-]", "_", challenge['token'])
+        keyauthorization = "{0}.{1}".format(token, thumbprint)
+        wellknown_path = os.path.join(acme_dir, token)
         wellknown_file = open(wellknown_path, "w")
         wellknown_file.write(keyauthorization)
         wellknown_file.close()
 
         # check that the file is in place
-        wellknown_url = "http://{0}/.well-known/acme-challenge/{1}".format(
-            domain, challenge['token'])
+        wellknown_url = "http://{0}/.well-known/acme-challenge/{1}".format(domain, token)
         try:
             resp = urllib2.urlopen(wellknown_url)
             assert resp.read().strip() == keyauthorization
