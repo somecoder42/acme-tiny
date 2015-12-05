@@ -148,7 +148,6 @@ def get_crt(account_key, csr, acme_dir):
 
     # get the new certificate
     sys.stderr.write("Signing certificate...")
-    
     csr_der = subprocess.check_output(["openssl", "req", "-in", csr, "-outform", "DER"])
     code, result = _send_signed_request(CA + "/acme/new-cert", {
         "resource": "new-cert",
