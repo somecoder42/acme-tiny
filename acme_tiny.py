@@ -90,7 +90,7 @@ def get_crt(account_key, csr, acme_dir):
             },
         })
         if code != 201:
-            raise ValueError("Error registering: {0} {1}".format(code, result))
+            raise ValueError("Error requesting challenge: {0} {1}".format(code, result))
 
         # make the challenge file
         challenge = [c for c in json.loads(result)['challenges'] if c['type'] == "http-01"][0]
