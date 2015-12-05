@@ -13,11 +13,7 @@ def get_crt(account_key, csr, acme_dir):
 
     # parse account key to get public key
     sys.stderr.write("Parsing account key...")
-    proc = subprocess.Popen(["openssl", "rsa", "-in", account_key, "-noout", "-text"],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    if proc.returncode != 0:
-        raise IOError("OpenSSL Error: {0}".format(err))
+    out = subprocess.check_output(["openssl", "rsa", "-in", account_key, "-noout", "-text"])
     pub_hex, pub_exp = re.search(
         r"modulus:\n\s+00:([a-f0-9\:\s]+?)\npublicExponent: ([0-9]+)",
         out, re.MULTILINE|re.DOTALL).groups()
@@ -64,11 +60,7 @@ def get_crt(account_key, csr, acme_dir):
 
     # find domains
     sys.stderr.write("Parsing CSR...")
-    proc = subprocess.Popen(["openssl", "req", "-in", csr, "-noout", "-text"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    if proc.returncode != 0:
-        raise IOError("Error loading {0}: {1}".format(csr, err))
+    out = subprocess.check_output(["openssl", "req", "-in", csr, "-noout", "-text"])
     domains = set([])
     common_name = re.search(r"Subject:.*? CN=([^\s,;/]+)", out)
     if common_name is not None:
@@ -156,9 +148,8 @@ def get_crt(account_key, csr, acme_dir):
 
     # get the new certificate
     sys.stderr.write("Signing certificate...")
-    proc = subprocess.Popen(["openssl", "req", "-in", csr, "-outform", "DER"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    csr_der, err = proc.communicate()
+    
+    csr_der = subprocess.check_output(["openssl", "req", "-in", csr, "-outform", "DER"])
     code, result = _send_signed_request(CA + "/acme/new-cert", {
         "resource": "new-cert",
         "csr": _b64(csr_der),
