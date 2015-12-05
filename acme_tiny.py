@@ -61,15 +61,11 @@ def get_crt(account_key, csr, acme_dir):
     # find domains
     sys.stderr.write("Parsing CSR...")
     out = subprocess.check_output(["openssl", "req", "-in", csr, "-noout", "-text"])
-    domains = set([])
+    subject_alt_names = re.search(r"X509v3 Subject Alternative Name: \n +([^\n]+)\n", out, re.MULTILINE|re.DOTALL)
+    domains = set([san[4:] for san in subject_alt_names.group(1).split(", ") if san.startswith("DNS:")])
     common_name = re.search(r"Subject:.*? CN=([^\s,;/]+)", out)
     if common_name is not None:
         domains.add(common_name.group(1))
-    subject_alt_names = re.search(r"X509v3 Subject Alternative Name: \n +([^\n]+)\n", out, re.MULTILINE|re.DOTALL)
-    if subject_alt_names is not None:
-        for san in subject_alt_names.group(1).split(", "):
-            if san.startswith("DNS:"):
-                domains.add(san[4:])
     sys.stderr.write("parsed!\n")
 
     # get the certificate domains and expiration
